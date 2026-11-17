@@ -1,0 +1,14 @@
+# Argo CD syncs this folder (prune + selfHeal).
+# Secret this folder reads, never committed (sealed in the cluster repo by scripts/make-secrets.sh):
+#   bulk-to-text-secrets: APP_PASSWORD, SESSION_SECRET, ANTHROPIC_API_KEY
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: bulk-to-text
+resources:
+  - namespace.yaml
+  - web.yaml
+  - ingress.yaml
+# CI rewrites newTag to the sha-<commit> it just pushed.
+images:
+  - name: ghcr.io/peyhunter/bulk-to-text
+    newTag: "sha-0000000"

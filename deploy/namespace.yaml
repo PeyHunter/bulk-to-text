@@ -1,0 +1,5 @@
+# Everything for bulk-to-text lives in one namespace.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bulk-to-text
