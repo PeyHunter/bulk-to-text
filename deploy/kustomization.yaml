@@ -11,4 +11,4 @@ resources:
 # CI rewrites newTag to the sha-<commit> it just pushed.
 images:
   - name: ghcr.io/peyhunter/bulk-to-text
-    newTag: "sha-0000000"
+    newTag: "sha-f34f2d8"
