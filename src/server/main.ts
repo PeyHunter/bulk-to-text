@@ -17,7 +17,10 @@ const port = Number(env.PORT ?? 3000);
 const ocr = ocrConfig(env);
 if (!ocr) console.log("ANTHROPIC_API_KEY is not set: the app runs, but cannot read text from images.");
 
-const app = createApp({ password: env.APP_PASSWORD, sessionSecret: env.SESSION_SECRET, ocr, secure: production, now: () => new Date() });
+// Approximate, only for showing cost in kroner. Set in deploy/web.yaml.
+const usdToDkk = Number(env.USD_TO_DKK) || 6.9;
+
+const app = createApp({ password: env.APP_PASSWORD, sessionSecret: env.SESSION_SECRET, ocr, secure: production, now: () => new Date(), usdToDkk });
 // Built files carry a hash in their name, so they never change; the page itself must be asked for again each time.
 const cacheRules = (path: string, c: Context) =>
   c.header("cache-control", /\/assets\//.test(path) ? "public, max-age=31536000, immutable" : "no-cache");

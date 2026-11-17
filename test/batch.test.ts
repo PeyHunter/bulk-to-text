@@ -1,6 +1,6 @@
 import { strFromU8, unzipSync } from "fflate";
 import { describe, expect, test } from "vitest";
-import { combinedText, naturalOrder, withRetries, zipOfTexts, type Item, type OcrAnswer } from "../src/web/batch.ts";
+import { formatKroner, naturalOrder, withRetries, zipOfTexts, type Item, type OcrAnswer } from "../src/web/batch.ts";
 
 const item = (name: string, change: Partial<Item> = {}): Item => ({ id: name, name, status: "done", text: `text of ${name}`, error: "", costUsd: null, ...change });
 
@@ -37,9 +37,8 @@ describe("withRetries", () => {
   });
 });
 
-test("combined text heads each image with its name and lists failures", () => {
-  const text = combinedText([item("a.jpg"), item("b.jpg", { text: "" }), item("c.jpg", { status: "failed", error: "busy" }), item("d.jpg", { status: "waiting" })]);
-  expect(text).toBe("===== a.jpg =====\n\ntext of a.jpg\n\n===== b.jpg =====\n\n(No text found)\n\n===== c.jpg =====\n\n(Could not read this image: busy)\n");
+test("cost shows in kroner the Danish way", () => {
+  expect(formatKroner(0.0348, 6.9).replace(/\s/g, " ")).toBe("ca. 0,24 kr.");
 });
 
 test("the zip has one .txt per read image, with clashing names kept apart", () => {

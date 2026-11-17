@@ -34,6 +34,9 @@ spec:
           env:
             - name: PORT
               value: "3000"
+            # Approximate USD to DKK rate, only used to show cost in kroner.
+            - name: USD_TO_DKK
+              value: "6.9"
             - name: APP_PASSWORD
               valueFrom:
                 secretKeyRef:

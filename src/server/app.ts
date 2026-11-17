@@ -12,6 +12,8 @@ export type AppDependencies = {
   /** Send the session cookie only over https. */
   secure: boolean;
   now: () => Date;
+  /** Approximate rate the page uses to show cost in kroner; Anthropic bills in USD. */
+  usdToDkk: number;
 };
 
 const minute = 60 * 1000;
@@ -29,7 +31,7 @@ const samePassword = (given: string, expected: string) => timingSafeEqual(sha256
 // Traefik sets X-Forwarded-For; without it (tests, local runs) everyone shares one bucket.
 const clientAddress = (c: Context) => c.req.header("x-forwarded-for")?.split(",")[0]?.trim() || "local";
 
-export function createApp({ password, sessionSecret, ocr, secure, now }: AppDependencies) {
+export function createApp({ password, sessionSecret, ocr, secure, now, usdToDkk }: AppDependencies) {
   const app = new Hono();
   const failures = new Map<string, number[]>();
 
@@ -41,7 +43,7 @@ export function createApp({ password, sessionSecret, ocr, secure, now }: AppDepe
     return recent;
   };
 
-  app.get("/api/health", (c) => c.json({ ok: true, ocrReady: ocr !== undefined }));
+  app.get("/api/health", (c) => c.json({ ok: true, ocrReady: ocr !== undefined, usdToDkk }));
 
   app.post("/api/login", async (c) => {
     const address = clientAddress(c);

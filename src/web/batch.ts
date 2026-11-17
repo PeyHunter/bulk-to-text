@@ -41,17 +41,6 @@ export async function sendImage(file: File, name: string): Promise<OcrAnswer> {
   return { ok: false, error: body.error ?? `Something went wrong (${response.status}).`, costUsd, retry: response.status === 429 || response.status >= 500 };
 }
 
-/** Every image under its name, in order. Failed images are listed too, so none go missing unnoticed. */
-export function combinedText(items: Item[]) {
-  return items
-    .filter((item) => item.status === "done" || item.status === "failed")
-    .map((item) => {
-      const body = item.status === "failed" ? `(Could not read this image: ${item.error})` : item.text || "(No text found)";
-      return `===== ${item.name} =====\n\n${body}\n`;
-    })
-    .join("\n");
-}
-
 /** One .txt per read image, named after the image; folders are kept. */
 export function zipOfTexts(items: Item[]) {
   const files: Record<string, Uint8Array> = {};
@@ -65,6 +54,6 @@ export function zipOfTexts(items: Item[]) {
   return zipSync(files);
 }
 
-export function formatUsd(amount: number) {
-  return `$${amount.toFixed(amount < 1 ? 4 : 2)}`;
-}
+const kroner = new Intl.NumberFormat("da-DK", { style: "currency", currency: "DKK" });
+/** Anthropic bills in dollars; the page shows kroner at an approximate rate. */
+export const formatKroner = (usd: number, usdToDkk: number) => `ca. ${kroner.format(usd * usdToDkk)}`;

@@ -12,7 +12,7 @@ afterEach(() => close?.());
 vi.spyOn(console, "log").mockImplementation(() => {});
 vi.spyOn(console, "error").mockImplementation(() => {});
 
-const makeApp = (ocr?: OcrConfig) => createApp({ password, sessionSecret: "s".repeat(32), ocr, secure: false, now: () => now });
+const makeApp = (ocr?: OcrConfig) => createApp({ password, sessionSecret: "s".repeat(32), ocr, secure: false, now: () => now, usdToDkk: 6.9 });
 
 async function appWithFake(answer: () => Reply) {
   const server = await startFakeAnthropic(answer);
@@ -34,9 +34,9 @@ async function ocrRequest(cookie: string, file?: File) {
 
 describe("login", () => {
   test("health is open and says whether OCR is ready", async () => {
-    expect(await (await makeApp().request("/api/health")).json()).toEqual({ ok: true, ocrReady: false });
+    expect(await (await makeApp().request("/api/health")).json()).toEqual({ ok: true, ocrReady: false, usdToDkk: 6.9 });
     const ocr = { client: new Anthropic({ apiKey: "k" }), model: "claude-opus-5-5" };
-    expect(await (await makeApp(ocr).request("/api/health")).json()).toEqual({ ok: true, ocrReady: true });
+    expect(await (await makeApp(ocr).request("/api/health")).json()).toEqual({ ok: true, ocrReady: true, usdToDkk: 6.9 });
   });
 
   test("the right password gives a session that opens the API", async () => {

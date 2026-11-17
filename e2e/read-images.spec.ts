@@ -1,5 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
+import { strFromU8, unzipSync } from "fflate";
+import { PDFDocument } from "pdf-lib";
 import sharp from "sharp";
 import { e2ePassword } from "./env.ts";
 
@@ -39,16 +41,31 @@ test("log in, drop three images, download all the text", async ({ page }) => {
   await expect(results.nth(0)).toContainText("Billede 101 px bredt");
   await expect(results.nth(2)).toContainText("Billede 110 px bredt");
   // Three reads of 1000 in and 20 out on claude-opus-5-5.
-  await expect(page.getByTestId("total-cost")).toHaveText("Cost so far: about $0.0132");
+  // $0.0132 at the default rate of 6.9 kroner.
+  await expect(page.getByTestId("total-cost")).toHaveText("Cost so far: ca. 0,09 kr.");
 
-  const downloading = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Download all as one .txt" }).click();
-  const download = await downloading;
-  expect(download.suggestedFilename()).toBe("all-text.txt");
-  const text = await readFile((await download.path())!, "utf8");
+  const downloadAs = async (format: string) => {
+    await page.getByLabel("File type").selectOption(format);
+    const downloading = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Download all" }).click();
+    const download = await downloading;
+    expect(download.suggestedFilename()).toMatch(new RegExp(`^bulk-to-text-\\d{4}-\\d{2}-\\d{2}\\.${format}$`));
+    return readFile((await download.path())!);
+  };
+
+  // Word is the default.
+  await expect(page.getByLabel("File type")).toHaveValue("docx");
+  const xml = strFromU8(unzipSync(new Uint8Array(await downloadAs("docx")))["word/document.xml"]!);
+  expect(xml.indexOf("side 1.png")).toBeLessThan(xml.indexOf("side 10.png"));
+  expect(xml).toContain("Billede 110 px bredt");
+
+  const pdf = await PDFDocument.load(await downloadAs("pdf"));
+  expect(pdf.getPageCount()).toBe(1);
+
+  const text = (await downloadAs("txt")).toString("utf8");
   expect(text).toBe(
     ["side 1.png", "side 2.png", "side 10.png"]
       .map((name) => `===== ${name} =====\n\nBillede ${100 + Number(name.match(/\d+/)![0])} px bredt\nAnden linje\n`)
-      .join("\n"),
+      .join("\n") + "\n===== Not included =====\n\n- notes.txt (not an image)\n",
   );
 });
